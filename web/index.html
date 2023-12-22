@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="description" content="Saito Network">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="author" content="Stephen Peterkins">
+
+		<link rel="stylesheet" href="/saito/lib/font-awesome-5/css/all.css" type="text/css" media="screen" />
+		<link rel="manifest" href="/manifest.json">
+
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="application-name" content="Saito Chat">
+		<meta name="apple-mobile-web-app-title" content="Saito Chat">
+		<meta name="theme-color" content="#FFFFFF">
+		<meta name="msapplication-navbutton-color" content="#FFFFFF">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+		<meta name="msapplication-starturl" content="/index.html">
+
+		<link rel="icon" sizes="192x192" href="/saito/img/touch/pwa-192x192.png">
+		<link rel="apple-touch-icon" sizes="192x192" href="/saito/img/touch/pwa-192x192.png">
+		<link rel="icon" sizes="512x512" href="/saito/img/touch/pwa-512x512.png">
+		<link rel="apple-touch-icon" sizes="512x512" href="/saito/img/touch/pwa-512x512.png">
+
+		<title>Saito Chat</title>
+		<link rel="stylesheet" href="/saito/style.css">
+
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-okaidia.min.css" rel="stylesheet" />
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+
+	</head>
+	<body>
+		<h1> Saito Interactive Documentation </h1>
+		
+		
+
+		<h3> Getting User Public Key: </h3>
+		
+		<div class="explainer">
+		<p> Every Saito client will automatically generate or load its previous key pair upon startup. Developers have access to this public key from within their module very simply via <code class="language-javascript"> this.publicKey</code>
+        </div>
+		
+		<pre><code class="language-javascript">async render(app) {
+	await super.render(app);
+	this.place_ui.attachEvents();
+
+	let userPubKey = this.publicKey;
+	document.getElementById("pubKey").innerHTML = userPubKey;
+	}</code></pre>
+
+ <h3> Your public key: <code id="publicKey" class="language-javascript"></code> </h4>
+
+		<h3> Sending a Transaction </h3>
+
+		<div class="explainer">
+		<p> Becuase Saito Consensus incentivizes routing for all transactions, the primary method of sending messages in Saito is through transactions. Even if no fee is attached, the format defines a standard for which peers to relay data between each other and to sign and encrypt that data. The transaction below is sent from your wallet to the <code class="language-javascript">publicKey</code> chosen below.
+		
+		<p> By defining objects within the <code class="language-javascript">msg</code> field of <code class="language-javascript">newtx</code>, user data and data related to applications can be included in the transaction. In order for a module to later return these transactions to the user, the <code class="language-javascript">msg.module</code> must match the module name (<code class="language-javascript">this.name</code>) and the transaction must either be addressed to or sent from the current user.
+		</div>
+		
+		<pre class="codeBlock" ><code class="language-javascript">async sendTx(publicKey, message="") {
+    let newtx = await this.app.wallet.createUnsignedTransaction(publicKey);
+    newtx.msg.data = message;
+    newtx.msg.module = this.name; // this.name == "Livedocs"
+
+    await newtx.sign();
+    this.app.network.propagateTransaction(newtx);
+    }</code></pre>
+
+		<p> recipient's <code class="language-javascript">publicKey</code>:
+		<input type="text" id="txRecipient">
+		<br></p>
+		<p> <code class="language-javascript">message</code>: <input type="text" id="txMsg" value="Hello World"><br></p>
+
+		<p><input id="sendTx_button" class="button" type="button">
+		<code class="language-javascript" >sendTx(recipient_pubKey, message)</code></p>
+
+		<h3> Receiving a Confirmed Transaction </h3>
+		
+		<div class="explainer">
+		
+		<p> <code class="language-javascript">onConfirmation</code> is a built-in Saito function which is automatically called when a confirmed transaction for the current user running the current module is sent from a peer. When it is included in a module the developer is allowed to modify its behavior.
+		
+		<p> <code class="language-javascript">if (this.app.BROWSER)</code> checks if it is within the browser, which is helpful to do before performing procedures unique to lite clients - like updating the user interface. All Saito applications are simoultanously defined to run within full and lite nodes, but some actions should only take place within on or the other.
+		
+		<p>
+		
+		<code class="language-javascript">conf</code> represents the number of block confirmations the transaction in question has. <code class="language-javascript">conf == 0</code> indicates the <i>first</i> confirmation. The code below thus only runs for the first confirmation of each transaction addressed to this client & module.
+		
+		</div>
+
+		<pre><code class="language-javascript" id="onConfirmation">async onConfirmation(blk, tx, conf) {
+	let mod = this.app.modules.returnModule("Place");
+
+	if (conf > 0) { return; }
+
+	if (this.app.BROWSER) {
+		let txmsg = tx.returnMessage();
+		document.getElementById("onConf").innerHTML = JSON.stringify(txmsg);
+	//	this.place_ui.insertDOM("onConf", JSON.stringify(txmsg));
+		}
+	}</code></pre>
+
+		<p> Message from Blockchain: </p>
+		<div class="codeBlock_2">
+			<pre><code class="language-javascript" id="onConf">
+		</code></pre></div>
+
+		<br>
+		<h3> Sending a Relay Message </h3>
+
+		<pre><code class="language-javascript">sendRelayMessage(recipient=null, data="") {
+    console.log("data input: ", data);
+    this.app.connection.emit("relay-send-message", {
+            recipient,
+            request: "livedocs request",
+            data: data
+    	    });
+    }</code></pre>
+
+		<p> recipient's <code class="language-javascript">publicKey</code>: <input type="text" id="relayRecipient"><br></p>
+		<p>message <code class="language-javascript">data</code>: <input type="text" id="relayMessage" value="test message"><br></p>
+
+		<p><input id="sendRelay_button" class="button" type="button">
+		<code class="language-javascript" >sendRelayMessage(recipient, data)</code></p>
+
+		<br>
+		<h3> Receiving a Transaction/Relay Message </h3>
+
+		<code class="language-javascript"> <p> onPeerRequest </p> </code>
+
+		<pre><code class="language-javascript" id="handldePeerTransaction">async handlePeerTransaction(app, tx=null, peer, callback=null) {
+        if (tx.returnMessage().request != "livedocs request") {
+                return;
+        }
+        if (this.app.BROWSER) {
+                let message = tx.returnMessage().data;
+
+                // If message has encrypted flag, decrypt message.encMsg
+                if (message.encrypted) {
+                        message = message.encMsg;
+
+                        let sender = tx.from[0].publicKey;
+                        let decrypted = this.app.keychain.decryptMessage(sender, message);
+
+                        message = decrypted;
+                }
+                
+                this.livedocs_ui.insertDOM("handlePeer_output", message);
+        }
+}</code></pre>
+
+		<br>
+		<p> Message from Peer: </p>
+		<pre><code class="language-javascript" id="handlePeer_output">
+		</code></pre>
+
+		
+		<!-- KEY EXCHANGE -->
+		<br>
+		<h3> Key Exchange </h3>
+		<pre><code class="language-javascript">keyExchange(publicKey) {
+	let encrypt_mod = this.app.modules.returnModule("Encrypt");
+	encrypt_mod.initiate_key_exchange(publicKey);
+	console.log(this.app.keychain);
+	}</code></pre>
+
+		<p> recipient's <code class="language-javascript">publicKey</code>: <input type="text" id="exchangePubKey"><br></p>
+
+		<p><input id="keyExchange_button" class="button" type="button">
+		<code class="language-javascript" >keyExchange(publicKey)</code></p>
+
+		<!-- ENCRYPTED TRANSACTION PAYLOAD -->
+		<br>
+		<h3> Encrypted Peer Transaction </h3>
+		<pre><code class="language-javascript">encryptedMessage(publicKey, message="test_enc_message") {
+	let encrypted = this.app.keychain.encryptMessage(publicKey, message);
+	this.sendRelayMessage(publicKey, encrypted);
+	}</code></pre>
+
+		<p> recipient's <code class="language-javascript">publicKey</code>: <input type="text" id="encPublicKey"><br></p>
+		<p> <code class="language-javascript">message</code>: <input type="text" id="encMsg"><br></p>
+		<p><input id="encMsg_button" class="button" type="button">
+		   <code class="language-javascript" >encrypted_message(publicKey, "test_enc_message")</code></p>
+
+	</body>
+	<script type="text/javascript" src="/saito/saito.js" id="saito"></script>
+</html>
+
+<style>
+html {
+    font-family: sans-serif;
+	background: #343030;
+	color: white;
+}
+.button {
+	//border: 1px black; !important
+    background-color: #ffffff;
+	height: 20px;
+	width: 40px;
+	cursor: pointer;
+}
+#recipient {
+	width: 270px;	
+}
+
+code {
+	//	background: black;
+}
+
+.explainer  {
+    
+    width: 600px;
+    padding-left: 10px;
+    padding-right: 10px;
+    background: #444444;
+    border: grey 1.5px solid;
+    border-radius: 5px;
+}
+pre {
+	width: 600px;
+
+	background: #272822;
+	border: white 2px solid;
+}
+code {
+    background: #272822;
+    font-family: monospace;
+}
+
+input[type=text] {
+	width: 270px;
+}
+</style>
