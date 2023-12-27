@@ -109,7 +109,7 @@
 		</code></pre></div>
 
 		<br>
-		<h3> Sending a Relay Message </h3>
+		<h3 id="relayMessage"> Sending a Relay Message </h3>
 
 		<pre><code class="language-javascript">sendRelayMessage(recipient=null, data="") {
     console.log("data input: ", data);
@@ -129,7 +129,12 @@
 		<br>
 		<h3> Receiving a Transaction/Relay Message </h3>
 
-		<code class="language-javascript"> <p> onPeerRequest </p> </code>
+		<div class="explainer">
+			<p> When a node receives a relay message, which is itself a transaction, the function <code class="language-javascript">handlePeerTransaction</code> automatically fires. The code below ensures that the <code class="language-javascript">request</code> field matches the data set by the relay function in this application and that the code is running in the browser before handling the message content.
+
+			<p> Performing a key exchange and sending an encrypted message is explained below, but it can be seen that if this code does receive an encrypted message that it will handle it specially.
+
+		</div>
 
 		<pre><code class="language-javascript" id="handldePeerTransaction">async handlePeerTransaction(app, tx=null, peer, callback=null) {
         if (tx.returnMessage().request != "livedocs request") {
@@ -161,10 +166,20 @@
 		<!-- KEY EXCHANGE -->
 		<br>
 		<h3> Key Exchange </h3>
+
+		<div class="explainer">
+		
+			<p> The key exchange is an important process for any encrypted messaging application - the Saito SDK makes setting up such an exchange extremely simple - only requiring the two lines of code below to perform.
+
+			<p> The function takes as an input the public key (wallet address) of the target recipient and broadcasts the necessary information to begin the exchange. The other client will automatically perform their duties in the key exchange and both parties at the end will possess a shared secret between them.
+			
+			<p>
+
+		</div>
+
 		<pre><code class="language-javascript">keyExchange(publicKey) {
 	let encrypt_mod = this.app.modules.returnModule("Encrypt");
 	encrypt_mod.initiate_key_exchange(publicKey);
-	console.log(this.app.keychain);
 	}</code></pre>
 
 		<p> recipient's <code class="language-javascript">publicKey</code>: <input type="text" id="exchangePubKey"><br></p>
@@ -175,10 +190,27 @@
 		<!-- ENCRYPTED TRANSACTION PAYLOAD -->
 		<br>
 		<h3> Encrypted Peer Transaction </h3>
+
+		<div class="explainer">
+		<p> Once a shared secret between the client public key and another exists in their <code class="language-javascript"> this.app.keychain </code>, it can be used to encrypt data between the two. Note that the relay message being sent below is an object which lets the receiving function know it must be decrypted.
+
+		<p>
+		To see how exactly an encrypted message is decrypted, revisit the code under <code class="language-javascript"> if (message.encrypted) { </code> within the above documentation demonstrating the <code class="language-javascript"> handlePeerTransaction </code> function.
+		
+
+		</div>
+
+
 		<pre><code class="language-javascript">encryptedMessage(publicKey, message="test_enc_message") {
-	let encrypted = this.app.keychain.encryptMessage(publicKey, message);
-	this.sendRelayMessage(publicKey, encrypted);
-	}</code></pre>
+    let encrypted_data = this.app.keychain.encryptMessage(publicKey, message);
+    let encr_obj = {};
+
+    encr_obj.encrypted = true;
+    encr_obj.encMsg = encrypted_data;
+
+    <a href="page.html#relayMessage">this.sendRelayMessage(publicKey, encr_obj);</a>
+    }
+</code></pre>
 
 		<p> recipient's <code class="language-javascript">publicKey</code>: <input type="text" id="encPublicKey"><br></p>
 		<p> <code class="language-javascript">message</code>: <input type="text" id="encMsg"><br></p>

@@ -80,6 +80,7 @@ class Livedocs extends ModTemplate {
 			request: "livedocs request",
 			data: data
 		});
+		sendPeerRequest();
 
 	}
 
