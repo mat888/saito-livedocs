@@ -1,6 +1,6 @@
 const ModTemplate = require('../../lib/templates/modtemplate');
 const Livedocs_Ui = require('./lib/main');
-const PeerService = require("saito-js/lib/peer_service").default;
+//const PeerService = require("saito-js/lib/peer_service").default;
 
 class Livedocs extends ModTemplate {
 	constructor(app) {
@@ -8,24 +8,10 @@ class Livedocs extends ModTemplate {
 		this.app = app;
 		this.name = "Livedocs";
 		this.livedocs_ui = new Livedocs_Ui(this.app, this, "");
-		this.watched = "nKXr6TyzQmSLFWnqcQLA8WDcWxEDNgAGRKZnSEH3CD18";
 		return this;
 	}
-	async installModule(app) {
-		//
-		// make sure modTemplate can add any hooks its needs for database support, etc.
-		//
-		await super.installModule(app);
-		//
-		// add the publickey for the graffiti module to our keychain as a "watched" address
-		//
-		// nb: because we do this on "install" which happens before the network is up, we 
-		// do not need to call app.network.propagateKeylist() to update any peers, because
-		// we have not yet connected to any peers and informed them of our keylist.
-		//
-		//		this.app.keychain.addKey(this.appPubKey, {watched: true});
-	}
-	async render(app) {
+
+	async render(app) { // BUILT-IN FUNCTION
 		await super.render(app);
 		this.livedocs_ui.attachEvents();
 
@@ -33,10 +19,7 @@ class Livedocs extends ModTemplate {
 		document.getElementById("publicKey").innerHTML  = userPubKey;
 		document.getElementById("txRecipient").value    = userPubKey;
 		document.getElementById("relayRecipient").value = userPubKey;
-
-		this.app.keychain.addWatchedPublicKey("nKXr6TyzQmSLFWnqcQLA8WDcWxEDNgAGRKZnSEH3CD18");
 	}
-
 
 	async sendTx(publicKey, message="") {
 		let newtx = await this.app.wallet.createUnsignedTransaction(publicKey);
@@ -47,7 +30,7 @@ class Livedocs extends ModTemplate {
 		this.app.network.propagateTransaction(newtx);
 	}
 
-	async onConfirmation(blk, tx, conf) {
+	async onConfirmation(blk, tx, conf) { // BUILT-IN FUNCTION
 
 		console.log("On Confirmation -- tx is to: ", tx.to[0].publicKey);
 
@@ -80,11 +63,10 @@ class Livedocs extends ModTemplate {
 			request: "livedocs request",
 			data: data
 		});
-		sendPeerRequest();
 
 	}
 
-	async handlePeerTransaction(app, tx=null, peer, callback=null) {
+	async handlePeerTransaction(app, tx=null, peer, callback=null) { // BUILT-IN FUNCTION
 		if (tx.returnMessage().request != "livedocs request") {
 			return;
 		}
@@ -100,7 +82,6 @@ class Livedocs extends ModTemplate {
 
 				message = decrypted;
 			}
-
 			this.livedocs_ui.insertDOM("handlePeer_output", message);
 		}
 	}

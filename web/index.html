@@ -33,8 +33,29 @@
 	</head>
 	<body>
 		<h1> Saito Interactive Documentation </h1>
-		
-		
+
+		<h3> Setup </h3>
+
+		<div class="explainer">
+
+		<p> If you have manually installed a Saito node and are running this application from within it, this section will likely be redundant.
+
+		<p> Every Saito module lives within the <code>mods/app-name/</code> folder of the <a href="https://github.com/SaitoTech/saito-lite-rust"> Saito-Lite-Rust</a> Node Software, including this application, which can be found (once installed) inside <code>/mods/livedocs/</code>. The necessary core of the application lives inside the file <code>mods/livedocs/livedocs.js</code>.
+
+		<p> In order for an application to be compiled by the Node Server, it must be included in the JSON objects defined in <code>config/modules.default.js</code>, which means adding this line: <code> "livedocs/livedocs,"</code> within both the <code>core</code> and <code>lite</code> arrays. These instructions apply generally to any application being developed under this Saito SDK.
+
+		<p> Once the module files are defined in the config file, the code can be compiled via <code> npm run nuke </code> for a clean install and new blockchain, or via <code>npm run compile dev</code> for a quick install. Then use <code>npm start</code> to run your Saito Node - if running locally, the installed modules should be accessible via subdirectories of <code>localhost</code>; for example, this application might live under <code>http://127.0.0.1:12101/livedocs/</code>. Check your node's log in the command line for the URL pertaining to your machine.
+		</div>
+		<br>
+		<h3> Module File Structure </h3>
+		<div class="explainer">
+		<p>
+		For any module, the most important code lives under <code>mods/app-name/app-name.js</code>. Alongside it may exist auxillary folders such as <code> web/</code>, which contains HTML, CSS and other web page data, <code> lib/ </code> for extra module code which might belong outside <code>app-name.js</code>, and <code> sql </code> which contains a database for the module.
+
+		<p> The easiest way to begin learning one's way around a Saito application is to start with just <code>mods/app-name/app-name.js</code> and <code>mods/app-name/web/index.html</code> for the user interface - being sure you are able to make the basic logic and built-in functions of the blockchain work interactively with a basic user interface.
+
+		<p> Exploring <a href="https://github.com/SaitoTech/saito-lite-rust/tree/master/mods">existing modules</a> is also recommended. 
+		</div>
 
 		<h3> Getting User Public Key: </h3>
 		
@@ -109,7 +130,7 @@
 		</code></pre></div>
 
 		<br>
-		<h3 id="relayMessage"> Sending a Relay Message </h3>
+		<h3> Sending a Relay Message </h3>
 
 		<pre><code class="language-javascript">sendRelayMessage(recipient=null, data="") {
     console.log("data input: ", data);
