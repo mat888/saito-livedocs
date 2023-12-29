@@ -24,7 +24,7 @@ If the file `config/modules.config.js` does not exist in your SLR node, create i
 
 `cp config/modules.default.js config/modules.config.js`
 
-Open `config/modules.config.js` in a text editor and add the line `'livedocs/livedocs.js',` to **both** the `core` and `lite` arrays - which should end up looking something like this but without the `...`
+Open `config/modules.config.js` in a text editor and add the line `'livedocs/livedocs.js',` to **both** the `core` and `lite` arrays - which should end up looking something like this but without the `...` (do not copy and paste, just add the `livedocs/livedocs.js` line):
 ```
 module.exports = {
 	core: [
@@ -68,5 +68,12 @@ After all that, the livedocs module should be accessible at:
 
 ### Community
 
-If you run into any issues, contact the community for assistance:
+If you run into any issues, contact the community for assistance. The core team is most likely to assist you if contacted through a [Saito.io] domain:
 
+https://saito.io/redsquare
+
+https://saito.io/chat
+
+https://t.me/SaitoNodeRunners
+
+https://t.me/SaitoIO
