@@ -38,15 +38,30 @@
 
 		<div class="explainer">
 
-		<p> If you have manually installed a Saito node and are running this application from within it, this section will likely be redundant.
+		<p> If this document is being served to you remotely, you may wish follow the setup instructions so it can be investigated and modified locally. If you have manually installed a Saito node and are running this application from within it, this section will likely be redundant.
+
+		<p> Be sure you have a working and updated Saito-Lite-Rust node installed and that you can execute <code>npm start</code> in its directory without any errors. Official instructions can be found <a href="https://wiki.saito.io/tech/installation/javascript">here</a>.
 
 		<p> Every Saito module lives within the <code>mods/app-name/</code> folder of the <a href="https://github.com/SaitoTech/saito-lite-rust"> Saito-Lite-Rust</a> Node Software, including this application, which can be found (once installed) inside <code>/mods/livedocs/</code>. The necessary core of the application lives inside the file <code>mods/livedocs/livedocs.js</code>.
 
 		<p> In order for an application to be compiled by the Node Server, it must be included in the JSON objects defined in <code>config/modules.default.js</code>, which means adding this line: <code> "livedocs/livedocs,"</code> within both the <code>core</code> and <code>lite</code> arrays. These instructions apply generally to any application being developed under this Saito SDK.
 
-		<p> Once the module files are defined in the config file, the code can be compiled via <code> npm run nuke </code> for a clean install and new blockchain, or via <code>npm run compile dev</code> for a quick install. Then use <code>npm start</code> to run your Saito Node - if running locally, the installed modules should be accessible via subdirectories of <code>localhost</code>; for example, this application might live under <code>http://127.0.0.1:12101/livedocs/</code>. Check your node's log in the command line for the URL pertaining to your machine.
+		<p> Once the module files are defined in the config file, the code can be compiled via <code> npm run nuke </code> for a clean install and new blockchain, or via <code>npm run compile dev</code> for a quick install. Then use <code>npm start</code> to run your Saito Node - if running locally, the installed modules should be accessible via subdirectories of <code>localhost</code>; for example, this application might live under <code>http://localhost:12101/livedocs</code>. Double check the log in the command line for the URL and port pertaining to your machine.
 		</div>
+
 		<br>
+
+		<h3> Browser Cache </h3>
+
+		<div class="explainer">
+
+		<p> Often times when recompiling, especially when resetting the chain using <code>nuke</code>, the browser cache will desync with the chain and cause issues.
+		<p> The best first step in debugging a Saito module is often to clear your cache or open an incognito browser window. If your private key is important, be sure to back it up before clearing your cache.
+
+		</div>
+
+		<br>
+
 		<h3> Module File Structure </h3>
 		<div class="explainer">
 		<p>
@@ -80,7 +95,7 @@
 		
 		<p> By defining objects within the <code class="language-javascript">msg</code> field of <code class="language-javascript">newtx</code>, user data and data related to applications can be included in the transaction. In order for a module to later return these transactions to the user, the <code class="language-javascript">msg.module</code> must match the module name (<code class="language-javascript">this.name</code>) and the transaction must either be addressed to or sent from the current user.
 		</div>
-		
+		<!-- TODO tell users about and link to box that tx will show up in-->	
 		<pre class="codeBlock" ><code class="language-javascript">async sendTx(publicKey, message="") {
     let newtx = await this.app.wallet.createUnsignedTransaction(publicKey);
     newtx.msg.data = message;
@@ -108,7 +123,7 @@
 		
 		<p>
 		
-		<code class="language-javascript">conf</code> represents the number of block confirmations the transaction in question has. <code class="language-javascript">conf == 0</code> indicates the <i>first</i> confirmation. The code below thus only runs for the first confirmation of each transaction addressed to this client & module.
+		<code class="language-javascript">conf</code> represents the number of block confirmations the transaction in question has. <code class="language-javascript">conf == 0</code> indicates the <i>first</i> confirmation. The code below thus only runs for the first confirmation of each transaction addressed to this client module.
 		
 		</div>
 
@@ -148,7 +163,7 @@
 		<code class="language-javascript" >sendRelayMessage(recipient, data)</code></p>
 
 		<br>
-		<h3> Receiving a Transaction/Relay Message </h3>
+		<h3> Receiving an Unconfirmed Transaction Message (instantly) </h3>
 
 		<div class="explainer">
 			<p> When a node receives a relay message, which is itself a transaction, the function <code class="language-javascript">handlePeerTransaction</code> automatically fires. The code below ensures that the <code class="language-javascript">request</code> field matches the data set by the relay function in this application and that the code is running in the browser before handling the message content.
@@ -178,8 +193,7 @@
         }
 }</code></pre>
 
-		<br>
-		<p> Message from Peer: </p>
+		<p id="message_from_peer"> Message from Peer: </p>
 		<pre><code class="language-javascript" id="handlePeer_output">
 		</code></pre>
 
@@ -190,11 +204,13 @@
 
 		<div class="explainer">
 		
-			<p> The key exchange is an important process for any encrypted messaging application - the Saito SDK makes setting up such an exchange extremely simple - only requiring the two lines of code below to perform.
+			<p> The key exchange is an important process for any encrypted messaging application - the Saito SDK makes setting up such an exchange extremely simple - only requiring the two lines of code below to perform. 
 
 			<p> The function takes as an input the public key (wallet address) of the target recipient and broadcasts the necessary information to begin the exchange. The other client will automatically perform their duties in the key exchange and both parties at the end will possess a shared secret between them.
-			
-			<p>
+	
+			<p> Because a key exchange is a sensitive procedure, but only happens once, the blockchain is used to confirm the process rather than only relying on relay messages. This means that after initiating the key exchange, both parties will have to wait until the next block to use their shared secret.		
+
+			<p> The public key of this wallet is used by default, which means you will send encrypted messages to yourself. To test it with another wallet, open an incognito browser window with livedocs and use the public that page will generate for itself - don't forget to wait for the blockchain to confirm the key exchange! 
 
 		</div>
 
@@ -213,11 +229,13 @@
 		<h3> Encrypted Peer Transaction </h3>
 
 		<div class="explainer">
-		<p> Once a shared secret between the client public key and another exists in their <code class="language-javascript"> this.app.keychain </code>, it can be used to encrypt data between the two. Note that the relay message being sent below is an object which lets the receiving function know it must be decrypted.
 
-		<p>
-		To see how exactly an encrypted message is decrypted, revisit the code under <code class="language-javascript"> if (message.encrypted) { </code> within the above documentation demonstrating the <code class="language-javascript"> handlePeerTransaction </code> function.
+
+		<p> Once a shared secret between the client public key and another exists in their <code class="language-javascript"> this.app.keychain</code>, it can be used to encrypt data between the two. Note that the relay message being sent below is an object which lets the receiving function know it must be decrypted.
+
+		<p> To see how exactly an encrypted message is decrypted, revisit the code under <code class="language-javascript"> if (message.encrypted) {</code> within the above documentation demonstrating the <code class="language-javascript">handlePeerTransaction</code> function.
 		
+		<p> Because the encrypted data is being passed into the function described earler, <code class="language-javascript">sendRelayMessage(publicKey, data)</code> as <code class="language-javascript">data</code>, encrypted messages you recieve should appear above under the <i><a href="#message_from_peer">message from peer</a></i> section.
 
 		</div>
 
@@ -233,16 +251,29 @@
     }
 </code></pre>
 
-		<p> recipient's <code class="language-javascript">publicKey</code>: <input type="text" id="encPublicKey"><br></p>
-		<p> <code class="language-javascript">message</code>: <input type="text" id="encMsg"><br></p>
+		<p> recipient's <code class="language-javascript">publicKey</code>: <input type="text" id="encPubKey"><br></p>
+		<p> <code class="language-javascript">message</code>: <input type="text" id="encMsg" value="secret message"><br></p>
 		<p><input id="encMsg_button" class="button" type="button">
 		   <code class="language-javascript" >encrypted_message(publicKey, "test_enc_message")</code></p>
 
+	<!--	<p id="message_from_peer"> Message from Peer: </p>
+		<pre><code class="language-javascript" id="handlePeer_output">
+		</code></pre>
+		TODO: Make this duplicate message from peeer box mirror the above one
+	-->
+
+
 	</body>
+
 	<script type="text/javascript" src="/saito/saito.js" id="saito"></script>
 </html>
 
 <style>
+
+h3 {
+	margin-bottom: 3px;	
+}
+
 html {
     font-family: sans-serif;
 	background: #343030;

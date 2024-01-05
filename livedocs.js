@@ -19,6 +19,9 @@ class Livedocs extends ModTemplate {
 		document.getElementById("publicKey").innerHTML  = userPubKey;
 		document.getElementById("txRecipient").value    = userPubKey;
 		document.getElementById("relayRecipient").value = userPubKey;
+		document.getElementById("exchangePubKey").value = userPubKey;
+		document.getElementById("encPubKey").value = userPubKey;
+		this.saveLocally("test save locally");
 	}
 
 	async sendTx(publicKey, message="") {
@@ -93,14 +96,25 @@ class Livedocs extends ModTemplate {
 	}
 
 	encryptedMessage(publicKey, message="test_enc_message") {
-
 		let encrypted_data = this.app.keychain.encryptMessage(publicKey, message);
+		// do not allow the function to continue if encryption fails
+		if (encrypted_data == message) {
+			console.log("encryption failed");
+			return;
+		}
 		let encr_obj = {};
 		console.log(this.app.keychain);
 		encr_obj.encrypted = true;
 		encr_obj.encMsg = encrypted_data;
 		this.sendRelayMessage(publicKey, encr_obj);
 	}
+
+	saveLocally(data) {
+		console.log("app options: ", this.app.name, this.app.options);
+		console.log(this.app.storage);
+		this.app.storage.saveOptions();
+	}
+
 	/*
 	async handlePeerTransaction(app, tx=null, peer, callback=null) {
 		console.log("HANDLE PEER TX _______________");
