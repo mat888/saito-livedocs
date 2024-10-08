@@ -1,5 +1,6 @@
 const ModTemplate = require('../../lib/templates/modtemplate');
 const Livedocs_Ui = require('./lib/main');
+const SaitoHeader = require('../../lib/saito/ui/saito-header/saito-header');
 //const PeerService = require("saito-js/lib/peer_service").default;
 
 class Livedocs extends ModTemplate {
@@ -7,15 +8,34 @@ class Livedocs extends ModTemplate {
 		super(app);
 		this.app = app;
 		this.name = "Livedocs";
+		this.slug = 'livedocs';
+		this.description = 'Saito Interactive Documentation';
+		this.categories = 'Utilities Dev';
+
 		this.livedocs_ui = new Livedocs_Ui(this.app, this, "");
-		return this;
 	}
 
-	async render(app) { // BUILT-IN FUNCTION
-		await super.render(app);
-		this.livedocs_ui.attachEvents();
+	async render() { // BUILT-IN FUNCTION
+		if (!this.app.BROWSER) {
+			return;
+		}
+
+		// disables default saito.css,
+		// comment this block if want to include saito.css
+		var sheets = document.styleSheets.length
+		for(var i=0;i<sheets;i++){
+		    let stylesheet = document.styleSheets[i];
+		     if (stylesheet.href != null) {
+		      document.styleSheets[i].disabled=true;
+		     }
+		}
+
+		this.livedocs_ui.render();
 
 		let userPubKey = this.publicKey;
+
+		console.log("userPubKey: ", userPubKey);
+
 		document.getElementById("publicKey").innerHTML  = userPubKey;
 		document.getElementById("txRecipient").value    = userPubKey;
 		document.getElementById("relayRecipient").value = userPubKey;

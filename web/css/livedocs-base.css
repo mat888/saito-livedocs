@@ -1,0 +1,48 @@
+
+h3 {
+	margin-bottom: 3px;	
+}
+
+html {
+    font-family: sans-serif;
+	background: #343030;
+	color: white;
+}
+.button {
+	//border: 1px black; !important
+    background-color: #ffffff;
+	height: 20px;
+	width: 40px;
+	cursor: pointer;
+}
+#recipient {
+	width: 270px;	
+}
+
+code {
+	//	background: black;
+}
+
+.explainer  {
+    
+    width: 600px;
+    padding-left: 10px;
+    padding-right: 10px;
+    background: #444444;
+    border: grey 1.5px solid;
+    border-radius: 5px;
+}
+pre {
+	width: 950px;
+
+	background: #272822;
+	border: white 2px solid;
+}
+code {
+    background: #272822;
+    font-family: monospace;
+}
+
+input[type=text] {
+	width: 270px;
+}
